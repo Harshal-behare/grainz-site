@@ -11,7 +11,7 @@ const ContactPage: React.FC = () => {
     {
       icon: Mail,
       title: 'Email Us',
-      content: 'support@fitnesspro.com',
+      content: 'support@grainz.com',
       description: 'Get a response within 24 hours',
       action: 'mailto:support@fitnesspro.com',
     },

@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
               <div className="w-8 h-8 bg-fitness-gradient rounded-lg flex items-center justify-center">
                 <Dumbbell size={18} className="text-white" />
               </div>
-              <h1 className="text-lg font-bold gradient-text">FitnessPro</h1>
+              <h1 className="text-lg font-bold gradient-text">GrainZ</h1>
             </div>
           )}
           

@@ -44,7 +44,7 @@ const AboutPage: React.FC = () => {
       <section className="py-20 bg-background-secondary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            About <span className="gradient-text">FitnessPro</span>
+            About <span className="gradient-text">GrainZ</span>
           </h1>
           <p className="text-xl text-foreground-secondary max-w-3xl mx-auto">
             We&apos;re on a mission to make personalized fitness accessible to everyone. 

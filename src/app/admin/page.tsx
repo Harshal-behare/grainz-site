@@ -117,7 +117,7 @@ const AdminPage: React.FC = () => {
             <Input
               type="email"
               label="Email"
-              placeholder="admin@fitnesspro.com"
+              placeholder="admin@grainz.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

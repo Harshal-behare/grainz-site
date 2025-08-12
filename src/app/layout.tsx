@@ -7,21 +7,21 @@ import Footer from '@/components/layout/Footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'FitnessPro - Transform Your Body, Transform Your Life',
+  title: 'GrainZ by Maitri Ramaiya - Transform Your Body, Transform Your Life',
   description: 'Your ultimate fitness companion for personalized workout plans, nutrition guidance, and health tracking.',
-  keywords: 'fitness, workout, nutrition, health, bodybuilding, weight loss, muscle gain',
-  authors: [{ name: 'FitnessPro Team' }],
+  keywords: 'fitness, workout, nutrition, health, bodybuilding, weight loss, muscle gain, GrainZ, Maitri Ramaiya',
+  authors: [{ name: 'Maitri Ramaiya' }],
   viewport: 'width=device-width, initial-scale=1',
   themeColor: '#ef4444',
   openGraph: {
-    title: 'FitnessPro - Transform Your Body, Transform Your Life',
+    title: 'GrainZ by Maitri Ramaiya - Transform Your Body, Transform Your Life',
     description: 'Your ultimate fitness companion for personalized workout plans, nutrition guidance, and health tracking.',
     type: 'website',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FitnessPro - Transform Your Body, Transform Your Life',
+    title: 'GrainZ by Maitri Ramaiya - Transform Your Body, Transform Your Life',
     description: 'Your ultimate fitness companion for personalized workout plans, nutrition guidance, and health tracking.',
   },
   robots: {
