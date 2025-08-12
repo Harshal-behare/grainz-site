@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './supabase-client';
 import { FormSubmission, BodyMeasurements, FullBodyImage, CompleteFormData } from '@/types/database';
 import { CompleteUserData } from '@/types/fitness';
 

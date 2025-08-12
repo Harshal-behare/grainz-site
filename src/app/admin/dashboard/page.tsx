@@ -14,7 +14,7 @@ import {
   Mail,
   Phone
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase-client';
 import { getFormSubmissions, exportToCSV } from '@/lib/form-service';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
