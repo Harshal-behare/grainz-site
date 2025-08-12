@@ -161,25 +161,36 @@ const getClientIP = async (): Promise<string> => {
 };
 
 // Upload file to Supabase storage
-export const uploadFile = async (file: File, bucket: string = 'fitness-uploads'): Promise<string> => {
+export const uploadFile = async (file: File, folder: string = 'uploads'): Promise<string> => {
   try {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const filePath = `${bucket}/${fileName}`;
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(7);
+    const fileName = `${folder}/${timestamp}-${randomStr}.${fileExt}`;
 
+    console.log('Uploading file:', fileName, 'Size:', file.size);
+
+    // Upload to fitness-uploads bucket
     const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file);
+      .from('fitness-uploads')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
 
     if (error) {
+      console.error('Upload error:', error);
       throw error;
     }
 
+    console.log('Upload successful:', data);
+
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
+      .from('fitness-uploads')
+      .getPublicUrl(fileName);
 
+    console.log('Public URL:', publicUrl);
     return publicUrl;
   } catch (error) {
     console.error('File upload error:', error);
@@ -208,43 +219,129 @@ export const getFormSubmissions = async (): Promise<FormSubmission[]> => {
   }
 };
 
-// Export to CSV
-export const exportToCSV = (data: any[], filename: string = 'form-submissions.csv') => {
+// Export to CSV with proper field names
+export const exportToCSV = (data: any[], filename: string = 'grainz-fitness-submissions.csv') => {
   if (!data.length) return;
 
-  // Get headers from first object
-  const headers = Object.keys(data[0]);
+  // Map database columns to readable headers
+  const headerMapping: Record<string, string> = {
+    submission_id: 'Submission ID',
+    user_name: 'Your Name',
+    email: 'Email Address',
+    phone_number: 'Phone Number',
+    profession: 'Profession',
+    current_diet_timetable: 'Current Diet Timetable',
+    current_workout_plan: 'Current Workout Plan',
+    daily_schedule: 'Daily Schedule with Timings',
+    fitness_goal_6_months: 'Fitness Goal (6 Months)',
+    fitness_goal_long_term: 'Long-term Fitness Goal',
+    medical_issues_allergies: 'Medical Issues or Food Allergies',
+    preferred_workout_time: 'Preferred Workout Time',
+    has_personal_trainer: 'Has Personal Trainer',
+    target_body_areas: 'Target Body Areas',
+    resting_heart_rate: 'Resting Heart Rate (BPM)',
+    high_calorie_favourite_foods: 'High Calorie Favourite Foods',
+    other_high_calorie_sweets: 'Other High Calorie Sweets',
+    preferred_included_foods: 'Preferred Foods to Include',
+    foods_despised: 'Foods You Despise',
+    favourite_fruits: 'Favourite Fruits',
+    favourite_vegetables: 'Favourite Vegetables',
+    diet_habits: 'Diet Habits',
+    programme_start_date: 'Programme Start Date',
+    alcohol_smoke_frequency: 'Alcohol/Smoke Frequency',
+    programme_chosen: 'Programme Chosen',
+    blood_report_url: 'Blood Report',
+    body_composition_report_url: 'Body Composition Report',
+    aspiration_image_url: 'Aspiration Body Image',
+    created_at: 'Submitted At',
+    ip_address: 'IP Address',
+    user_agent: 'User Agent',
+    form_version: 'Form Version'
+  };
+
+  // Get ordered headers
+  const orderedKeys = [
+    'submission_id',
+    'created_at',
+    'user_name',
+    'email',
+    'phone_number',
+    'profession',
+    'programme_start_date',
+    'programme_chosen',
+    'fitness_goal_6_months',
+    'fitness_goal_long_term',
+    'target_body_areas',
+    'current_diet_timetable',
+    'current_workout_plan',
+    'daily_schedule',
+    'preferred_workout_time',
+    'has_personal_trainer',
+    'medical_issues_allergies',
+    'resting_heart_rate',
+    'alcohol_smoke_frequency',
+    'high_calorie_favourite_foods',
+    'other_high_calorie_sweets',
+    'preferred_included_foods',
+    'foods_despised',
+    'favourite_fruits',
+    'favourite_vegetables',
+    'diet_habits',
+    'blood_report_url',
+    'body_composition_report_url',
+    'aspiration_image_url'
+  ];
+
+  // Filter only existing keys
+  const existingKeys = orderedKeys.filter(key => data[0].hasOwnProperty(key));
+  const headers = existingKeys.map(key => headerMapping[key] || key);
   
+  // Format data for CSV
+  const formatValue = (value: any): string => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (Array.isArray(value)) {
+      return value.length > 0 ? value.join('; ') : '';
+    }
+    if (value instanceof Date) {
+      return value.toLocaleDateString();
+    }
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    // Format URLs as clickable links
+    if (typeof value === 'string' && value.startsWith('http')) {
+      return value;
+    }
+    return String(value);
+  };
+
   // Create CSV content
   const csvContent = [
     headers.join(','),
     ...data.map(row => 
-      headers.map(header => {
-        const value = row[header];
-        // Handle arrays and objects
-        if (Array.isArray(value)) {
-          return `"${value.join('; ')}"`;
+      existingKeys.map(key => {
+        const value = formatValue(row[key]);
+        // Escape quotes and wrap in quotes if contains comma, newline, or quotes
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+          return `"${value.replace(/"/g, '""')}"`;
         }
-        if (typeof value === 'object' && value !== null) {
-          return `"${JSON.stringify(value)}"`;
-        }
-        // Escape quotes and wrap in quotes if contains comma
-        const stringValue = String(value || '');
-        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-          return `"${stringValue.replace(/"/g, '""')}"`;
-        }
-        return stringValue;
+        return value;
       }).join(',')
     )
   ].join('\n');
 
-  // Create and trigger download
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  // Add BOM for UTF-8 encoding to properly display special characters
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
   
+  const date = new Date().toISOString().split('T')[0];
+  const finalFilename = filename.replace('.csv', `-${date}.csv`);
+  
   link.setAttribute('href', url);
-  link.setAttribute('download', filename);
+  link.setAttribute('download', finalFilename);
   link.style.visibility = 'hidden';
   
   document.body.appendChild(link);

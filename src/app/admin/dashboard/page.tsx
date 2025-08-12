@@ -2,24 +2,37 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Download, 
-  Users, 
-  FileText, 
-  Calendar,
-  Search,
-  Filter,
-  LogOut,
-  RefreshCw,
-  Eye,
-  Mail,
-  Phone
+  Download, Eye, Search, Calendar, User, 
+  Mail, Phone, Briefcase, Target, Heart, Clock,
+  FileText, Image as ImageIcon, Activity,
+  X, Maximize2, LogOut, RefreshCw, Users, TrendingUp,
+  Award
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { getFormSubmissions, exportToCSV } from '@/lib/form-service';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FormSubmission } from '@/types/database';
+
+interface BodyMeasurements {
+  submission_id: string;
+  forearm_in?: number;
+  bicep_in?: number;
+  shoulder_in?: number;
+  chest_in?: number;
+  upper_waist_in?: number;
+  lower_waist_in?: number;
+  belly_button_circumference_in?: number;
+  buttocks_in?: number;
+  thighs_in?: number;
+}
+
+interface FullBodyImage {
+  submission_id: string;
+  file_url: string;
+  view_type: string;
+}
 
 const AdminDashboard: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -28,6 +41,9 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubmission, setSelectedSubmission] = useState<FormSubmission | null>(null);
+  const [measurements, setMeasurements] = useState<BodyMeasurements | null>(null);
+  const [images, setImages] = useState<FullBodyImage[]>([]);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -35,14 +51,8 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Filter submissions based on search term
-    const filtered = submissions.filter(submission => 
-      submission.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      submission.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      submission.submission_id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredSubmissions(filtered);
-  }, [submissions, searchTerm]);
+    filterSubmissions();
+  }, [searchTerm, submissions]);
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -58,22 +68,56 @@ const AdminDashboard: React.FC = () => {
       setLoading(true);
       const data = await getFormSubmissions();
       setSubmissions(data);
+      setFilteredSubmissions(data);
     } catch (error) {
       console.error('Error loading submissions:', error);
-      alert('Failed to load submissions');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleExport = () => {
-    if (filteredSubmissions.length === 0) {
-      alert('No data to export');
+  const filterSubmissions = () => {
+    if (!searchTerm) {
+      setFilteredSubmissions(submissions);
       return;
     }
+
+    const filtered = submissions.filter(submission => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        submission.user_name?.toLowerCase().includes(searchLower) ||
+        submission.email?.toLowerCase().includes(searchLower) ||
+        submission.phone_number?.includes(searchTerm) ||
+        submission.submission_id?.toLowerCase().includes(searchLower)
+      );
+    });
+
+    setFilteredSubmissions(filtered);
+  };
+
+  const fetchSubmissionDetails = async (submission: FormSubmission) => {
+    setSelectedSubmission(submission);
     
-    const timestamp = new Date().toISOString().split('T')[0];
-    exportToCSV(filteredSubmissions, `fitness-submissions-${timestamp}.csv`);
+    // Fetch measurements
+    const { data: measurementData } = await supabase
+      .from('body_measurements')
+      .select('*')
+      .eq('submission_id', submission.submission_id)
+      .single();
+    
+    setMeasurements(measurementData);
+
+    // Fetch images
+    const { data: imageData } = await supabase
+      .from('full_body_images')
+      .select('*')
+      .eq('submission_id', submission.submission_id);
+    
+    setImages(imageData || []);
+  };
+
+  const handleExport = () => {
+    exportToCSV(filteredSubmissions);
   };
 
   const handleLogout = async () => {
@@ -81,7 +125,8 @@ const AdminDashboard: React.FC = () => {
     window.location.href = '/admin';
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -91,66 +136,30 @@ const AdminDashboard: React.FC = () => {
     });
   };
 
-  const stats = [
-    { 
-      title: 'Total Submissions', 
-      value: submissions.length.toString(), 
-      icon: Users,
-      color: 'text-blue-400'
-    },
-    { 
-      title: 'Today', 
-      value: submissions.filter(s => 
-        new Date(s.submitted_at || '').toDateString() === new Date().toDateString()
-      ).length.toString(), 
-      icon: Calendar,
-      color: 'text-green-400'
-    },
-    { 
-      title: 'This Week', 
-      value: submissions.filter(s => {
-        const submissionDate = new Date(s.submitted_at || '');
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return submissionDate >= weekAgo;
-      }).length.toString(), 
-      icon: FileText,
-      color: 'text-purple-400'
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-foreground-muted">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  const formatArray = (arr: string[] | null) => {
+    if (!arr || arr.length === 0) return 'None';
+    return arr.join(', ');
+  };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-background-secondary border-b border-border">
+      <div className="bg-background-secondary border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-              <p className="text-foreground-muted">
+              <h1 className="text-2xl font-bold">
+                <span className="gradient-text">grainZ</span> Admin Dashboard
+              </h1>
+              <p className="text-foreground-muted text-sm">
                 Manage fitness assessment submissions
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-foreground-muted">
-                Welcome, {user?.email}
+              <span className="text-sm text-foreground-muted hidden md:inline">
+                {user?.email}
               </span>
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-              >
+              <Button onClick={handleLogout} variant="outline" size="sm">
                 <LogOut size={16} className="mr-2" />
                 Logout
               </Button>
@@ -160,81 +169,128 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index}>
-                <CardContent className="flex items-center p-6">
-                  <div className="mr-4">
-                    <Icon size={24} className={stat.color} />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                    <p className="text-sm text-foreground-muted">{stat.title}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-foreground-muted flex items-center">
+                <Users size={16} className="mr-2" />
+                Total Submissions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{submissions.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-foreground-muted flex items-center">
+                <Calendar size={16} className="mr-2" />
+                This Week
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {submissions.filter(s => {
+                  const date = new Date(s.created_at || '');
+                  const weekAgo = new Date();
+                  weekAgo.setDate(weekAgo.getDate() - 7);
+                  return date > weekAgo;
+                }).length}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-foreground-muted flex items-center">
+                <TrendingUp size={16} className="mr-2" />
+                With Trainer
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {submissions.filter(s => s.has_personal_trainer).length}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-foreground-muted flex items-center">
+                <Award size={16} className="mr-2" />
+                Completed Programs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {submissions.filter(s => s.programme_chosen).length}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-          <div className="flex-1 max-w-md">
-            <Input
-              placeholder="Search by name, email, or ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              onClick={loadSubmissions}
-              variant="outline"
-              size="sm"
-            >
-              <RefreshCw size={16} className="mr-2" />
-              Refresh
-            </Button>
-            <Button
-              onClick={handleExport}
-              size="sm"
-            >
-              <Download size={16} className="mr-2" />
-              Export CSV
-            </Button>
-          </div>
-        </div>
+        {/* Search and Filter Bar */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-muted" size={20} />
+                <input
+                  type="text"
+                  placeholder="Search by name, email, phone or ID..."
+                  className="w-full pl-10 pr-4 py-2 bg-background-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Button onClick={handleExport} variant="outline">
+                <Download size={18} className="mr-2" />
+                Export CSV
+              </Button>
+              <Button onClick={loadSubmissions} variant="outline">
+                <RefreshCw size={18} className="mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Submissions Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Submissions ({filteredSubmissions.length})</CardTitle>
+            <CardTitle>Submissions ({filteredSubmissions.length})</CardTitle>
+            <CardDescription>
+              Click on any submission to view detailed information
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {filteredSubmissions.length === 0 ? (
+            {loading ? (
               <div className="text-center py-8">
-                <FileText size={48} className="mx-auto text-foreground-muted mb-4" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-foreground-muted">Loading submissions...</p>
+              </div>
+            ) : filteredSubmissions.length === 0 ? (
+              <div className="text-center py-8">
                 <p className="text-foreground-muted">No submissions found</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4">Submission ID</th>
-                      <th className="text-left py-3 px-4">Name</th>
-                      <th className="text-left py-3 px-4">Email</th>
-                      <th className="text-left py-3 px-4">Phone</th>
-                      <th className="text-left py-3 px-4">Submitted</th>
-                      <th className="text-left py-3 px-4">Actions</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium">ID</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium">Name</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium">Email</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium">Phone</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium">Submitted</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredSubmissions.map((submission) => (
-                      <tr key={submission.id} className="border-b border-border hover:bg-background-secondary">
+                      <tr key={submission.submission_id} className="border-b border-border hover:bg-background-secondary transition-colors">
                         <td className="py-3 px-4 font-mono text-xs">
                           {submission.submission_id}
                         </td>
@@ -242,27 +298,21 @@ const AdminDashboard: React.FC = () => {
                           {submission.user_name || 'N/A'}
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex items-center">
-                            <Mail size={14} className="mr-2 text-foreground-muted" />
-                            {submission.email || 'N/A'}
-                          </div>
+                          {submission.email || 'N/A'}
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex items-center">
-                            <Phone size={14} className="mr-2 text-foreground-muted" />
-                            {submission.phone_number || 'N/A'}
-                          </div>
+                          {submission.phone_number || 'N/A'}
                         </td>
-                        <td className="py-3 px-4 text-foreground-muted">
-                          {submission.submitted_at ? formatDate(submission.submitted_at) : 'N/A'}
+                        <td className="py-3 px-4 text-sm text-foreground-muted">
+                          {formatDate(submission.created_at)}
                         </td>
                         <td className="py-3 px-4">
                           <Button
-                            onClick={() => setSelectedSubmission(submission)}
                             size="sm"
-                            variant="outline"
+                            variant="ghost"
+                            onClick={() => fetchSubmissionDetails(submission)}
                           >
-                            <Eye size={14} className="mr-1" />
+                            <Eye size={16} className="mr-1" />
                             View
                           </Button>
                         </td>
@@ -276,44 +326,343 @@ const AdminDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Submission Detail Modal */}
+      {/* Detailed View Modal */}
       {selectedSubmission && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background-secondary rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-border">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Submission Details</h2>
-                <Button
-                  onClick={() => setSelectedSubmission(null)}
-                  variant="outline"
-                  size="sm"
-                >
-                  Close
-                </Button>
-              </div>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b border-border p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Submission Details</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedSubmission(null);
+                  setMeasurements(null);
+                  setImages([]);
+                }}
+              >
+                <X size={20} />
+              </Button>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold mb-3">Basic Information</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>ID:</strong> {selectedSubmission.submission_id}</p>
-                    <p><strong>Name:</strong> {selectedSubmission.user_name || 'N/A'}</p>
-                    <p><strong>Email:</strong> {selectedSubmission.email || 'N/A'}</p>
-                    <p><strong>Phone:</strong> {selectedSubmission.phone_number || 'N/A'}</p>
-                    <p><strong>Profession:</strong> {selectedSubmission.profession || 'N/A'}</p>
+
+            <div className="p-6 space-y-6">
+              {/* Basic Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <User size={20} className="mr-2" />
+                    Personal Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-foreground-muted">Your Name</label>
+                    <p className="font-medium">{selectedSubmission.user_name || 'N/A'}</p>
                   </div>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-3">Goals</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>6-month goal:</strong> {selectedSubmission.fitness_goal_6_months || 'N/A'}</p>
-                    <p><strong>Long-term goal:</strong> {selectedSubmission.fitness_goal_long_term || 'N/A'}</p>
-                    <p><strong>Target areas:</strong> {selectedSubmission.target_body_areas || 'N/A'}</p>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Email Address</label>
+                    <p className="font-medium">{selectedSubmission.email || 'N/A'}</p>
                   </div>
-                </div>
-              </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Phone Number</label>
+                    <p className="font-medium">{selectedSubmission.phone_number || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Profession</label>
+                    <p className="font-medium">{selectedSubmission.profession || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Programme Start Date</label>
+                    <p className="font-medium">{selectedSubmission.programme_start_date || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Programme Chosen</label>
+                    <p className="font-medium">{selectedSubmission.programme_chosen || 'N/A'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Fitness Goals */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Target size={20} className="mr-2" />
+                    Fitness Goals
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm text-foreground-muted">Fitness Goal (6 Months)</label>
+                    <p className="font-medium">{selectedSubmission.fitness_goal_6_months || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Long-term Fitness Goal</label>
+                    <p className="font-medium">{selectedSubmission.fitness_goal_long_term || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Target Body Areas</label>
+                    <p className="font-medium">{selectedSubmission.target_body_areas || 'N/A'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Health & Workout */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Activity size={20} className="mr-2" />
+                    Health & Workout Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="text-sm text-foreground-muted">Medical Issues/Food Allergies</label>
+                    <p className="font-medium">{selectedSubmission.medical_issues_allergies || 'None'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Resting Heart Rate</label>
+                    <p className="font-medium">{selectedSubmission.resting_heart_rate ? `${selectedSubmission.resting_heart_rate} BPM` : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Has Personal Trainer</label>
+                    <p className="font-medium">{selectedSubmission.has_personal_trainer ? 'Yes' : 'No'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Preferred Workout Time</label>
+                    <p className="font-medium">{selectedSubmission.preferred_workout_time || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Alcohol/Smoke Frequency</label>
+                    <p className="font-medium">{selectedSubmission.alcohol_smoke_frequency || 'N/A'}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm text-foreground-muted">Current Workout Plan</label>
+                    <p className="font-medium whitespace-pre-wrap">{selectedSubmission.current_workout_plan || 'N/A'}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm text-foreground-muted">Daily Schedule with Timings</label>
+                    <p className="font-medium whitespace-pre-wrap">{selectedSubmission.daily_schedule || 'N/A'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Diet Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <FileText size={20} className="mr-2" />
+                    Diet Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm text-foreground-muted">Current Diet Timetable</label>
+                    <p className="font-medium whitespace-pre-wrap">{selectedSubmission.current_diet_timetable || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">High Calorie Favourite Foods</label>
+                    <p className="font-medium">{formatArray(selectedSubmission.high_calorie_favourite_foods)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Other High Calorie Sweets</label>
+                    <p className="font-medium">{selectedSubmission.other_high_calorie_sweets || 'None'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Preferred Foods to Include</label>
+                    <p className="font-medium">{formatArray(selectedSubmission.preferred_included_foods)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Foods You Despise</label>
+                    <p className="font-medium">{formatArray(selectedSubmission.foods_despised)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Favourite Fruits</label>
+                    <p className="font-medium">{formatArray(selectedSubmission.favourite_fruits)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Favourite Vegetables</label>
+                    <p className="font-medium">{formatArray(selectedSubmission.favourite_vegetables)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground-muted">Diet Habits</label>
+                    <p className="font-medium">{formatArray(selectedSubmission.diet_habits)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Body Measurements */}
+              {measurements && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Activity size={20} className="mr-2" />
+                      Body Measurements (inches)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-sm text-foreground-muted">Forearm</label>
+                        <p className="font-medium">{measurements.forearm_in || 'N/A'}"</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-foreground-muted">Bicep</label>
+                        <p className="font-medium">{measurements.bicep_in || 'N/A'}"</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-foreground-muted">Shoulder</label>
+                        <p className="font-medium">{measurements.shoulder_in || 'N/A'}"</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-foreground-muted">Chest</label>
+                        <p className="font-medium">{measurements.chest_in || 'N/A'}"</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-foreground-muted">Upper Waist</label>
+                        <p className="font-medium">{measurements.upper_waist_in || 'N/A'}"</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-foreground-muted">Lower Waist</label>
+                        <p className="font-medium">{measurements.lower_waist_in || 'N/A'}"</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-foreground-muted">Belly Button</label>
+                        <p className="font-medium">{measurements.belly_button_circumference_in || 'N/A'}"</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-foreground-muted">Buttocks</label>
+                        <p className="font-medium">{measurements.buttocks_in || 'N/A'}"</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-foreground-muted">Thighs</label>
+                        <p className="font-medium">{measurements.thighs_in || 'N/A'}"</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Uploaded Files */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <FileText size={20} className="mr-2" />
+                    Uploaded Documents
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {selectedSubmission.blood_report_url && (
+                    <div className="flex items-center justify-between p-3 bg-background-secondary rounded-lg">
+                      <span>Blood Report</span>
+                      <a href={selectedSubmission.blood_report_url} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline">View</Button>
+                      </a>
+                    </div>
+                  )}
+                  {selectedSubmission.body_composition_report_url && (
+                    <div className="flex items-center justify-between p-3 bg-background-secondary rounded-lg">
+                      <span>Body Composition Report</span>
+                      <a href={selectedSubmission.body_composition_report_url} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline">View</Button>
+                      </a>
+                    </div>
+                  )}
+                  {selectedSubmission.aspiration_image_url && (
+                    <div className="flex items-center justify-between p-3 bg-background-secondary rounded-lg">
+                      <span>Aspiration Body Image</span>
+                      <a href={selectedSubmission.aspiration_image_url} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline">View</Button>
+                      </a>
+                    </div>
+                  )}
+                  {!selectedSubmission.blood_report_url && !selectedSubmission.body_composition_report_url && !selectedSubmission.aspiration_image_url && (
+                    <p className="text-foreground-muted">No documents uploaded</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Body Images */}
+              {images.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <ImageIcon size={20} className="mr-2" />
+                      Full Body Images
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {images.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={image.file_url}
+                            alt={`${image.view_type} view`}
+                            className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setExpandedImage(image.file_url)}
+                          />
+                          <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                            {image.view_type}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 text-white hover:bg-black/70"
+                            onClick={() => setExpandedImage(image.file_url)}
+                          >
+                            <Maximize2 size={16} />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Submission Metadata */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submission Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-foreground-muted">Submission ID:</span>
+                    <span className="font-mono">{selectedSubmission.submission_id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-foreground-muted">Submitted At:</span>
+                    <span>{formatDate(selectedSubmission.created_at)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-foreground-muted">IP Address:</span>
+                    <span>{selectedSubmission.ip_address || 'N/A'}</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Image Modal */}
+      {expandedImage && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={() => setExpandedImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <img
+              src={expandedImage}
+              alt="Expanded view"
+              className="max-w-full max-h-full object-contain"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-4 right-4 text-white hover:bg-white/20"
+              onClick={() => setExpandedImage(null)}
+            >
+              <X size={24} />
+            </Button>
           </div>
         </div>
       )}

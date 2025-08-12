@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
               <div className="w-8 h-8 bg-fitness-gradient rounded-lg flex items-center justify-center">
                 <Dumbbell size={18} className="text-white" />
               </div>
-              <span className="text-xl font-bold gradient-text">FitnessPro</span>
+              <span className="text-xl font-bold gradient-text">grainZ</span>
             </div>
             <p className="text-foreground-muted mb-4 max-w-md">
               Transform your body, transform your life. Get personalized workout plans, 
@@ -49,7 +49,7 @@ const Footer: React.FC = () => {
             <div className="space-y-2 text-sm text-foreground-muted">
               <div className="flex items-center space-x-2">
                 <Mail size={16} />
-                <span>support@fitnesspro.com</span>
+                <span>info@grainz.com</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone size={16} />
@@ -135,7 +135,7 @@ const Footer: React.FC = () => {
             </div>
             <div className="text-center md:text-right">
               <p className="text-foreground-muted text-sm">
-                © {currentYear} FitnessPro. All rights reserved.
+                © {currentYear} grainZ by Maitri Ramaiya. All rights reserved.
               </p>
               <p className="text-foreground-muted text-xs mt-1">
                 Made with ❤️ for the fitness community

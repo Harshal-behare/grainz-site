@@ -25,7 +25,7 @@ const Header: React.FC = () => {
             <div className="w-8 h-8 bg-fitness-gradient rounded-lg flex items-center justify-center">
               <Dumbbell size={18} className="text-white" />
             </div>
-            <span className="text-xl font-bold gradient-text">FitnessPro</span>
+            <span className="text-xl font-bold gradient-text">grainZ</span>
           </Link>
 
           {/* Desktop Navigation */}
