@@ -190,10 +190,22 @@ export const uploadFile = async (file: File, bucket: string = 'fitness-uploads')
 // Get all form submissions (admin only)
 export const getFormSubmissions = async (): Promise<FormSubmission[]> => {
   try {
-    const { data, error } = await supabase
+    // Try to use the view first
+    let { data, error } = await supabase
       .from('form_export_view')
       .select('*')
       .order('submitted_at', { ascending: false });
+
+    // If view doesn't exist, use the table directly
+    if (error && error.code === '42P01') {
+      const result = await supabase
+        .from('form_submissions')
+        .select('*')
+        .order('submitted_at', { ascending: false });
+      
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       throw error;
