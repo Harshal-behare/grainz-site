@@ -68,7 +68,7 @@ const DietPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) => {
     });
   };
 
-  const handleTextInput = (field: string, value: string) => {
+  const handleTextInput = (field: string, value: string | string[]) => {
     updateData({
       diet: {
         ...dietData,

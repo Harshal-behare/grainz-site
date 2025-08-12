@@ -39,17 +39,22 @@ const MeasurementsStep: React.FC<FormStepProps> = ({ data, updateData }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {measurements.map((measurement) => (
-          <Input
-            key={measurement.key}
-            type="number"
-            label={measurement.label}
-            placeholder={measurement.placeholder}
-            value={measurementData[measurement.key as keyof typeof measurementData] || ''}
-            onChange={(e) => handleMeasurementChange(measurement.key, e.target.value)}
-            helperText="in inches"
-          />
-        ))}
+        {measurements.map((measurement) => {
+          const value = measurementData[measurement.key as keyof typeof measurementData];
+          const displayValue = value !== undefined && value !== null ? String(value) : '';
+          
+          return (
+            <Input
+              key={measurement.key}
+              type="number"
+              label={measurement.label}
+              placeholder={measurement.placeholder}
+              value={displayValue}
+              onChange={(e) => handleMeasurementChange(measurement.key, e.target.value)}
+              helperText="in inches"
+            />
+          );
+        })}
       </div>
 
       <div className="bg-background-tertiary rounded-lg p-4">
