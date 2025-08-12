@@ -10,10 +10,10 @@ const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Assessment', href: '/questionnaire' },
-    { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
+    // { name: 'Home', href: '/' },
+    { name: 'Form', href: '/questionnaire' },
+    // { name: 'About', href: '/about' },
+    // { name: 'Contact', href: '/contact' },
   ];
 
   return (
@@ -45,14 +45,14 @@ const Header: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             <Link href="/admin">
               <Button variant="ghost" size="sm">
-                Admin
+                Admin Login
               </Button>
             </Link>
-            <Link href="/questionnaire">
+            {/* <Link href="/questionnaire">
               <Button size="sm">
                 Get Started
               </Button>
-            </Link>
+            </Link> */}
           </div>
 
           {/* Mobile menu button */}
@@ -87,14 +87,14 @@ const Header: React.FC = () => {
             <div className="px-4 pt-2 space-y-2">
               <Link href="/admin">
                 <Button variant="ghost" size="sm" className="w-full">
-                  Admin
+                  Admin Login
                 </Button>
               </Link>
-              <Link href="/questionnaire">
+              {/* <Link href="/questionnaire">
                 <Button size="sm" className="w-full">
                   Get Started
                 </Button>
-              </Link>
+              </Link> */}
             </div>
           </nav>
         </div>

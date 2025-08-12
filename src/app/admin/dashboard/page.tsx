@@ -304,7 +304,7 @@ const AdminDashboard: React.FC = () => {
                           {submission.phone_number || 'N/A'}
                         </td>
                         <td className="py-3 px-4 text-sm text-foreground-muted">
-                          {formatDate(submission.created_at)}
+                          {formatDate(submission.created_at || null)}
                         </td>
                         <td className="py-3 px-4">
                           <Button
@@ -461,7 +461,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">High Calorie Favourite Foods</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.high_calorie_favourite_foods)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.high_calorie_favourite_foods || null)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Other High Calorie Sweets</label>
@@ -469,23 +469,23 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Preferred Foods to Include</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.preferred_included_foods)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.preferred_included_foods || null)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Foods You Despise</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.foods_despised)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.foods_despised || null)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Favourite Fruits</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.favourite_fruits)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.favourite_fruits || null)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Favourite Vegetables</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.favourite_vegetables)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.favourite_vegetables || null)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Diet Habits</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.diet_habits)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.diet_habits || null)}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -630,7 +630,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-foreground-muted">Submitted At:</span>
-                    <span>{formatDate(selectedSubmission.created_at)}</span>
+                    <span>{formatDate(selectedSubmission.created_at || null)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-foreground-muted">IP Address:</span>

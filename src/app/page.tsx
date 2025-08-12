@@ -1,11 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ArrowRight, Play, Star, Users, Target, Award, CheckCircle, Zap, Heart, Shield } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useRouter } from 'next/navigation';
 
 const HomePage: React.FC = () => {
+  const router = useRouter();
+  
+  // Redirect to questionnaire immediately
+  useEffect(() => {
+    router.push('/questionnaire');
+  }, [router]);
   const stats = [
     { label: 'Active Users', value: '10,000+', icon: Users },
     { label: 'Workouts Completed', value: '500K+', icon: Target },
