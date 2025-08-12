@@ -22,10 +22,10 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-fitness-gradient rounded-lg flex items-center justify-center">
-              <Dumbbell size={18} className="text-white" />
+            <div className="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center">
+              <img src="logo.png" alt="Description"/>
             </div>
-            <span className="text-xl font-bold gradient-text">grainZ</span>
+            <span className="text-xl font-bold gradient-text">grainZ By Maitri Ramaiya</span>
           </Link>
 
           {/* Desktop Navigation */}
