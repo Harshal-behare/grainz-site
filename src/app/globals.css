@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-foreground-muted;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary/90 shadow-glow hover:shadow-glow-lg;
+  }
+
+  .btn-secondary {
+    @apply btn bg-background-secondary text-foreground hover:bg-background-tertiary border border-border;
+  }
+
+  .btn-ghost {
+    @apply btn hover:bg-background-secondary hover:text-foreground;
+  }
+
+  .card {
+    @apply rounded-xl bg-background-secondary border border-border p-6 shadow-sm;
+  }
+
+  .card-hover {
+    @apply card transition-all hover:shadow-glow hover:border-primary/50 cursor-pointer;
+  }
+
+  .input {
+    @apply flex h-10 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  .hero-section {
+    @apply min-h-screen flex items-center justify-center bg-dark-gradient relative overflow-hidden;
+  }
+
+  .hero-section::before {
+    content: '';
+    @apply absolute inset-0 bg-fitness-gradient opacity-10;
+  }
+
+  .dashboard-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+  }
+
+  .form-section {
+    @apply space-y-6 p-6 bg-background-secondary rounded-xl border border-border;
+  }
+
+  .slider-track {
+    @apply w-full h-2 bg-background-tertiary rounded-full relative overflow-hidden;
+  }
+
+  .slider-thumb {
+    @apply absolute top-0 h-full bg-fitness-gradient rounded-full transition-all;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
