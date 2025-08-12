@@ -9,20 +9,16 @@ const Footer: React.FC = () => {
     company: [
       { name: 'About Us', href: '/about' },
       { name: 'Contact', href: '/contact' },
-      { name: 'Careers', href: '/careers' },
-      { name: 'Blog', href: '/blog' },
+      { name: 'Dashboard', href: '/dashboard' },
+      { name: 'Assessment', href: '/questionnaire' },
     ],
     legal: [
       { name: 'Privacy Policy', href: '/privacy-policy' },
       { name: 'Terms of Service', href: '/terms-of-service' },
-      { name: 'Cookie Policy', href: '/cookie-policy' },
-      { name: 'Refund Policy', href: '/refund-policy' },
     ],
     support: [
-      { name: 'Help Center', href: '/help' },
-      { name: 'FAQ', href: '/faq' },
-      { name: 'Contact Support', href: '/support' },
-      { name: 'Community', href: '/community' },
+      { name: 'Contact Us', href: '/contact' },
+      { name: 'Get Started', href: '/questionnaire' },
     ],
   };
 

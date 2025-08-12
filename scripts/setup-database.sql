@@ -82,34 +82,16 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('fitness-uploads', 'fitness-uploads', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Storage policies (if not exists)
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM storage.policies 
-        WHERE bucket_id = 'fitness-uploads' 
-        AND name = 'Enable upload for anon'
-    ) THEN
-        INSERT INTO storage.policies (bucket_id, name, definition, operation)
-        VALUES (
-            'fitness-uploads',
-            'Enable upload for anon',
-            '{"role": "anon"}',
-            'INSERT'
-        );
-    END IF;
-    
-    IF NOT EXISTS (
-        SELECT 1 FROM storage.policies 
-        WHERE bucket_id = 'fitness-uploads' 
-        AND name = 'Enable read for all'
-    ) THEN
-        INSERT INTO storage.policies (bucket_id, name, definition, operation)
-        VALUES (
-            'fitness-uploads',
-            'Enable read for all',
-            '{"role": "anon"}',
-            'SELECT'
-        );
-    END IF;
-END $$;
+-- Storage policies
+-- Drop existing storage policies if they exist
+DROP POLICY IF EXISTS "Enable upload for anon" ON storage.objects;
+DROP POLICY IF EXISTS "Enable read for all" ON storage.objects;
+
+-- Create storage policies using Supabase's storage RLS
+CREATE POLICY "Enable upload for anon" ON storage.objects
+FOR INSERT TO anon
+WITH CHECK (bucket_id = 'fitness-uploads');
+
+CREATE POLICY "Enable read for all" ON storage.objects
+FOR SELECT TO anon
+USING (bucket_id = 'fitness-uploads');

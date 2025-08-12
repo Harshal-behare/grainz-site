@@ -6,6 +6,7 @@ import { CompleteUserData, FormStep } from '@/types/fitness';
 import Button from '@/components/ui/Button';
 import Progress from '@/components/ui/Progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { submitFormData } from '@/lib/form-service';
 
 // Import form step components
 import BodyTypeStep from '@/components/forms/BodyTypeStep';
@@ -93,8 +94,6 @@ const QuestionnairePage: React.FC = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const { submitFormData } = await import('@/lib/form-service');
-      
       console.log('Submitting form data:', formData);
       const submissionId = await submitFormData(formData);
       
