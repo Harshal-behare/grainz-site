@@ -59,6 +59,7 @@ const PersonalInfoStep: React.FC<FormStepProps> = ({ data, updateData }) => {
     });
   };
 
+
   return (
     <div className="space-y-8">
       {/* Name */}
@@ -176,6 +177,7 @@ const PersonalInfoStep: React.FC<FormStepProps> = ({ data, updateData }) => {
           </div>
         </div>
       </div>
+
 
       <div className="bg-background-tertiary rounded-lg p-4">
         <p className="text-sm text-foreground-muted">

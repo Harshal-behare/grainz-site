@@ -47,6 +47,17 @@ const sugarIntake = [
   { id: 'high', label: 'High', description: 'Love my sweets!', emoji: '🍰' },
 ];
 
+const dietHabits = [
+  { id: 'meal_prep', label: 'I meal prep regularly', emoji: '🍱' },
+  { id: 'eat_out', label: 'I eat out frequently', emoji: '🍽️' },
+  { id: 'late_night', label: 'I tend to eat late at night', emoji: '🌙' },
+  { id: 'emotional_eating', label: 'I sometimes eat when stressed', emoji: '💔' },
+  { id: 'fast_eater', label: 'I eat quickly', emoji: '⏱️' },
+  { id: 'skip_meals', label: 'I sometimes skip meals', emoji: '⏭️' },
+  { id: 'water_conscious', label: 'I drink plenty of water', emoji: '💧' },
+  { id: 'snacker', label: 'I snack between meals', emoji: '🥨' },
+];
+
 const DietPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) => {
   const dietData = data.diet || {};
 
@@ -73,6 +84,20 @@ const DietPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) => {
       diet: {
         ...dietData,
         [field]: value,
+      },
+    });
+  };
+
+  const handleDietHabitToggle = (habitId: string) => {
+    const currentHabits = dietData.diet_habits || [];
+    const updatedHabits = currentHabits.includes(habitId)
+      ? currentHabits.filter(h => h !== habitId)
+      : [...currentHabits, habitId];
+    
+    updateData({
+      diet: {
+        ...dietData,
+        diet_habits: updatedHabits,
       },
     });
   };
@@ -136,6 +161,44 @@ const DietPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) => {
         </div>
       </div>
 
+      {/* Diet Habits */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Which of these describe your eating habits?</h3>
+        <p className="text-sm text-foreground-muted mb-4">Select all that apply</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {dietHabits.map((habit) => {
+            const isSelected = dietData.diet_habits?.includes(habit.id) || false;
+            
+            return (
+              <div
+                key={habit.id}
+                onClick={() => handleDietHabitToggle(habit.id)}
+                className={cn(
+                  'card-hover cursor-pointer p-3',
+                  'transition-all duration-200 flex items-center space-x-3',
+                  isSelected && 'ring-2 ring-primary bg-primary/5'
+                )}
+              >
+                <div className="text-xl">{habit.emoji}</div>
+                <div className="flex-1 text-sm font-medium text-foreground">{habit.label}</div>
+                <div className={cn(
+                  'w-5 h-5 rounded border-2 flex items-center justify-center',
+                  isSelected
+                    ? 'bg-primary border-primary'
+                    : 'bg-background border-border'
+                )}>
+                  {isSelected && (
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Current Diet */}
       <div>
         <h3 className="text-lg font-semibold mb-4">Tell us about your current diet</h3>
@@ -145,7 +208,7 @@ const DietPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) => {
               Current diet schedule (brief overview)
             </label>
             <textarea
-              className="w-full h-24 px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full h-24 px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               placeholder="e.g., 3 meals a day, intermittent fasting 16:8, etc."
               value={dietData.current_diet_timetable || ''}
               onChange={(e) => handleTextInput('current_diet_timetable', e.target.value)}
@@ -162,6 +225,31 @@ const DietPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) => {
               placeholder="e.g., Brussels sprouts, liver, mushrooms"
               value={dietData.foods_despised?.join(', ') || ''}
               onChange={(e) => handleTextInput('foods_despised', e.target.value.split(', ').filter(Boolean))}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground block mb-2">
+              Favorite foods you'd like to include
+            </label>
+            <textarea
+              className="w-full h-24 px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+              placeholder="e.g., Chicken, avocado, quinoa, berries, Greek yogurt"
+              value={dietData.favorite_foods || ''}
+              onChange={(e) => handleTextInput('favorite_foods', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground block mb-2">
+              Any allergies or intolerances?
+            </label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="e.g., Lactose intolerant, nut allergy, gluten sensitivity"
+              value={dietData.allergies_intolerances || ''}
+              onChange={(e) => handleTextInput('allergies_intolerances', e.target.value)}
             />
           </div>
         </div>

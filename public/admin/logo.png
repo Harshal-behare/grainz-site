@@ -1,0 +1,10 @@
+# Logo Placeholder
+
+This is a placeholder for the logo.png file.
+
+To add your actual logo:
+1. Replace this file with your actual logo image (PNG format)
+2. Recommended dimensions: 200x50 pixels for header logo
+3. Make sure the file is named "logo.png" and placed in the public/admin/ directory
+
+For now, the application will work without the logo image showing.

@@ -3,15 +3,18 @@ import { FormStepProps } from '@/types/fitness';
 import Input from '@/components/ui/Input';
 
 const measurements = [
-  { key: 'forearm_in', label: 'Forearm', placeholder: 'Forearm circumference' },
-  { key: 'bicep_in', label: 'Bicep', placeholder: 'Bicep circumference' },
+  { key: 'neck_in', label: 'Neck', placeholder: 'Neck circumference' },
   { key: 'shoulder_in', label: 'Shoulders', placeholder: 'Shoulder width' },
   { key: 'chest_in', label: 'Chest', placeholder: 'Chest circumference' },
+  { key: 'bicep_in', label: 'Bicep', placeholder: 'Bicep circumference (flexed)' },
+  { key: 'forearm_in', label: 'Forearm', placeholder: 'Forearm circumference' },
   { key: 'upper_waist_in', label: 'Upper Waist', placeholder: 'Upper waist circumference' },
   { key: 'lower_waist_in', label: 'Lower Waist', placeholder: 'Lower waist circumference' },
-  { key: 'belly_button_circumference_in', label: 'Belly Button', placeholder: 'Belly button circumference' },
+  { key: 'belly_button_circumference_in', label: 'Belly Button', placeholder: 'At belly button level' },
+  { key: 'hips_in', label: 'Hips', placeholder: 'Hip circumference' },
   { key: 'buttocks_in', label: 'Buttocks', placeholder: 'Buttocks circumference' },
   { key: 'thighs_in', label: 'Thighs', placeholder: 'Thigh circumference' },
+  { key: 'calves_in', label: 'Calves', placeholder: 'Calf circumference' },
 ];
 
 const MeasurementsStep: React.FC<FormStepProps> = ({ data, updateData }) => {
@@ -31,7 +34,7 @@ const MeasurementsStep: React.FC<FormStepProps> = ({ data, updateData }) => {
     <div className="space-y-8">
       <div className="text-center mb-8">
         <p className="text-foreground-muted">
-          Body measurements help us track your progress more accurately. All measurements should be in inches.
+          Body measurements help us track your progress more accurately. <strong>All measurements should be in inches.</strong>
         </p>
         <p className="text-sm text-foreground-muted mt-2">
           💡 Don&apos;t have a measuring tape? You can skip this step and add measurements later.
@@ -67,6 +70,8 @@ const MeasurementsStep: React.FC<FormStepProps> = ({ data, updateData }) => {
           <li>• Measure over bare skin when possible</li>
           <li>• Stand relaxed in a natural position</li>
           <li>• Take measurements on the dominant side of your body</li>
+          <li>• For circumference measurements, measure at the widest point</li>
+          <li>• Have someone help you for hard-to-reach areas</li>
         </ul>
       </div>
 

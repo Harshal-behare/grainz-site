@@ -1,7 +1,7 @@
 import React from 'react';
 import { FormStepProps } from '@/types/fitness';
 import { cn } from '@/lib/utils';
-import { Home, Building2 } from 'lucide-react';
+import { Home, Building2, Clock, UserCheck } from 'lucide-react';
 
 const workoutLocations = [
   {
@@ -26,6 +26,15 @@ const equipmentLevels = [
   { id: 'full', title: 'Full Gym Access', description: 'All machines and equipment', emoji: '💪' },
 ];
 
+const workoutTimes = [
+  { id: 'early_morning', label: 'Early Morning', description: '5-7 AM', emoji: '🌅' },
+  { id: 'morning', label: 'Morning', description: '7-10 AM', emoji: '☀️' },
+  { id: 'lunch', label: 'Lunch Time', description: '11 AM-1 PM', emoji: '🌞' },
+  { id: 'afternoon', label: 'Afternoon', description: '2-5 PM', emoji: '🌤️' },
+  { id: 'evening', label: 'Evening', description: '5-8 PM', emoji: '🌆' },
+  { id: 'night', label: 'Night', description: '8-11 PM', emoji: '🌙' },
+];
+
 const WorkoutPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) => {
   const workoutData = data.workout || {};
 
@@ -43,6 +52,24 @@ const WorkoutPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) =
       workout: {
         ...workoutData,
         equipment_access_level: level,
+      },
+    });
+  };
+
+  const handleWorkoutTimeSelect = (time: string) => {
+    updateData({
+      workout: {
+        ...workoutData,
+        preferred_workout_time: time,
+      },
+    });
+  };
+
+  const handlePersonalTrainerToggle = () => {
+    updateData({
+      workout: {
+        ...workoutData,
+        has_personal_trainer: !workoutData.has_personal_trainer,
       },
     });
   };
@@ -115,6 +142,75 @@ const WorkoutPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) =
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Preferred Workout Time */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4">When do you prefer to work out?</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {workoutTimes.map((time) => {
+            const isSelected = workoutData.preferred_workout_time === time.id;
+            
+            return (
+              <div
+                key={time.id}
+                onClick={() => handleWorkoutTimeSelect(time.id)}
+                className={cn(
+                  'card-hover cursor-pointer text-center p-3',
+                  'transition-all duration-200',
+                  isSelected && 'ring-2 ring-primary bg-primary/5'
+                )}
+              >
+                <div className="text-2xl mb-1">{time.emoji}</div>
+                <div className="text-sm font-medium text-foreground">{time.label}</div>
+                <div className="text-xs text-foreground-muted">{time.description}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Personal Trainer */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Do you work with a personal trainer?</h3>
+        <div
+          onClick={handlePersonalTrainerToggle}
+          className={cn(
+            'card-hover cursor-pointer p-4',
+            'transition-all duration-200',
+            workoutData.has_personal_trainer && 'ring-2 ring-primary bg-primary/5'
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <UserCheck size={20} className="text-primary" />
+              </div>
+              <div>
+                <div className="font-medium text-foreground">
+                  {workoutData.has_personal_trainer ? 'Yes, I have a trainer' : 'No, I train independently'}
+                </div>
+                <div className="text-sm text-foreground-muted">
+                  {workoutData.has_personal_trainer 
+                    ? 'I work with a certified personal trainer'
+                    : 'I prefer to work out on my own'}
+                </div>
+              </div>
+            </div>
+            <div className={cn(
+              'w-5 h-5 rounded-full border-2',
+              workoutData.has_personal_trainer
+                ? 'bg-primary border-primary'
+                : 'bg-background border-border'
+            )}>
+              {workoutData.has_personal_trainer && (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full" />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

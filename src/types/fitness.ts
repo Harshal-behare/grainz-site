@@ -84,6 +84,7 @@ export interface AdditionalPreferences {
   additional_goals?: string[];
   extra_challenge?: 'walk_10k_steps_7d' | 'burpee_25_10d' | 'no_sugar_21d' | 'all_challenges' | 'none';
   wants_supplements_guide?: boolean;
+  programme_chosen?: string;
 }
 
 // File upload types
@@ -160,7 +161,14 @@ export type FormStep =
   | 'contact-info'
   | 'personal-details'
   | 'file-uploads'
-  | 'body-measurements';
+  | 'body-measurements'
+  | 'current-routine'
+  | 'food-preferences'
+  | 'fitness-goals'
+  | 'schedule'
+  | 'medical-info'
+  | 'programme-selection'
+  | 'full-body-images';
 
 // UI Component types
 export interface FormStepProps {

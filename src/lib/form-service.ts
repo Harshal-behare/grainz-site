@@ -9,57 +9,79 @@ const generateSubmissionId = (): string => {
   return `FIT-${timestamp}-${random}`;
 };
 
-// Convert form data to database format
+// Convert form data to database format - all 43 fields
 const convertFormDataToSubmission = (formData: Partial<CompleteUserData>): FormSubmission => {
-  return {
+  const submission: FormSubmission = {
     submission_id: generateSubmissionId(),
     
-    // Basic Information
-    user_name: formData.profile?.user_name,
-    email: formData.profile?.email,
-    phone_number: formData.profile?.phone_number,
-    profession: formData.profile?.profession,
+    // Basic Information (4 fields)
+    user_name: formData.profile?.user_name || null,
+    email: formData.profile?.email || null,
+    phone_number: formData.profile?.phone_number || null,
+    profession: formData.profile?.profession || null,
     
-    // Current Status
-    current_diet_timetable: formData.diet?.current_diet_timetable,
-    current_workout_plan: formData.workout?.current_workout_plan,
-    daily_schedule: formData.workout?.daily_schedule,
+    // Demographics (4 fields)
+    age_bracket: formData.personal?.age_bracket || null,
+    height_cm: formData.personal?.height || null,
+    current_weight_kg: formData.personal?.weight?.current || null,
+    target_weight_kg: formData.personal?.weight?.target || null,
     
-    // Goals
-    fitness_goal_6_months: formData.goals?.fitness_goal_6_months,
-    fitness_goal_long_term: formData.goals?.fitness_goal_long_term,
-    target_body_areas: formData.goals?.target_body_areas,
+    // Current Status (3 fields)
+    current_diet_timetable: formData.diet?.current_diet_timetable || null,
+    current_workout_plan: formData.workout?.current_workout_plan || null,
+    daily_schedule: formData.workout?.daily_schedule || null,
     
-    // Health Information
-    medical_issues_allergies: formData.health?.medical_issues_allergies,
-    resting_heart_rate: formData.health?.resting_heart_rate,
+    // Goals (5 fields)
+    fitness_goal_6_months: formData.goals?.fitness_goal_6_months || null,
+    fitness_goal_long_term: formData.goals?.fitness_goal_long_term || null,
+    target_body_areas: JSON.stringify(formData.goals?.target_body_areas || []),
+    primary_goal: formData.goals?.primary_goal || null,
+    ideal_physique: formData.goals?.physique_target as 'athlete' | 'hero' | 'bodybuilder' | undefined || null,
     
-    // Workout Preferences
-    preferred_workout_time: formData.workout?.preferred_workout_time,
-    has_personal_trainer: formData.workout?.has_personal_trainer || false,
+    // Health Information (5 fields)
+    medical_issues_allergies: formData.health?.medical_issues_allergies || null,
+    resting_heart_rate: formData.health?.resting_heart_rate || null,
+    alcohol_smoke_frequency: formData.health?.alcohol_smoke_frequency || null,
+    body_fat_percent_band: formData.health?.body_fat_percent_band || null,
+    water_intake: formData.health?.water_intake || null,
     
-    // Diet Preferences
-    high_calorie_favourite_foods: formData.diet?.high_calorie_favourite_foods || [],
-    other_high_calorie_sweets: formData.diet?.other_high_calorie_sweets,
-    preferred_included_foods: formData.diet?.preferred_included_foods || [],
-    foods_despised: formData.diet?.foods_despised || [],
-    favourite_fruits: formData.diet?.favourite_fruits || [],
-    favourite_vegetables: formData.diet?.favourite_vegetables || [],
-    diet_habits: formData.diet?.diet_habits || [],
+    // Workout Preferences (9 fields)
+    preferred_workout_time: formData.workout?.preferred_workout_time || null,
+    has_personal_trainer: formData.workout?.has_personal_trainer ?? false,
+    workout_location: formData.workout?.workout_location || null,
+    equipment_access_level: formData.workout?.equipment_access_level || null,
+    training_frequency_recent: formData.workout?.training_frequency_recent || null,
+    session_duration_preference: formData.workout?.session_duration_preference || null,
+    fitness_level: formData.workout?.fitness_level || null,
+    pushups_max_reps_band: formData.workout?.pushups_max_reps_band || null,
+    pullups_max_reps_band: formData.workout?.pullups_max_reps_band || null,
     
-    // Program Information
-    programme_start_date: formData.profile?.programme_start_date?.toISOString().split('T')[0],
-    programme_chosen: formData.additional?.extra_challenge,
-    alcohol_smoke_frequency: formData.health?.alcohol_smoke_frequency,
+    // Diet Preferences (9 fields)
+    diet_type: formData.diet?.diet_type || null,
+    high_calorie_favourite_foods: JSON.stringify(formData.diet?.high_calorie_favourite_foods || []),
+    other_high_calorie_sweets: formData.diet?.other_high_calorie_sweets || null,
+    preferred_included_foods: JSON.stringify(formData.diet?.preferred_included_foods || []),
+    foods_despised: JSON.stringify(formData.diet?.foods_despised || []),
+    favourite_fruits: JSON.stringify(formData.diet?.favourite_fruits || []),
+    favourite_vegetables: JSON.stringify(formData.diet?.favourite_vegetables || []),
+    diet_habits: JSON.stringify(formData.diet?.diet_habits || []),
+    sugar_intake_frequency: formData.diet?.sugar_intake_frequency || null,
+    mealprep_time_preference: formData.diet?.mealprep_time_preference || null,
     
-    // File Uploads
-    blood_report_url: formData.files?.blood_report_url,
-    body_composition_report_url: formData.files?.body_composition_report_url,
-    aspiration_image_url: formData.files?.aspiration_image_url,
+    // Program Information (2 fields)
+    programme_start_date: formData.profile?.programme_start_date?.toISOString().split('T')[0] || null,
+    programme_chosen: formData.additional?.programme_chosen || formData.additional?.extra_challenge || null,
+    
+    // File Uploads (3 fields)
+    blood_report_url: formData.files?.blood_report_url || null,
+    body_composition_report_url: formData.files?.body_composition_report_url || null,
+    aspiration_image_url: formData.files?.aspiration_image_url || null,
     
     // Metadata
     form_version: 'v1.0',
   };
+  
+  return submission;
 };
 
 // Convert measurements to database format
@@ -82,50 +104,106 @@ const convertMeasurements = (formData: Partial<CompleteUserData>, submissionId: 
 
 // Submit complete form data
 export const submitFormData = async (formData: Partial<CompleteUserData>): Promise<string> => {
+  let submissionId: string | null = null;
+  let uploadedFiles: string[] = [];
+
   try {
-    // Get client IP and user agent
+    // Step 1: Get client information
     const clientInfo = {
       ip_address: await getClientIP(),
       user_agent: navigator.userAgent,
     };
 
-    // Convert and prepare submission data
-    const submission = convertFormDataToSubmission(formData);
+    // Step 2: Handle file uploads before database insertion
+    const uploadedUrls: { [key: string]: string | null } = {};
+    
+    // Handle regular file uploads (File objects)
+    if (formData.files) {
+      for (const [key, value] of Object.entries(formData.files)) {
+        if (value && value instanceof File) {
+          try {
+            const folder = key === 'aspiration_image_url' ? 'images' : 'reports';
+            const url = await uploadFile(value, folder);
+            uploadedUrls[key] = url;
+            uploadedFiles.push(url); // Track for cleanup on failure
+          } catch (uploadError) {
+            console.error(`Failed to upload ${key}:`, uploadError);
+            uploadedUrls[key] = null;
+          }
+        } else if (typeof value === 'string') {
+          // Already a URL, use as-is
+          uploadedUrls[key] = value;
+        }
+      }
+    }
+
+    // Handle body images uploads
+    const uploadedBodyImages: FullBodyImage[] = [];
+    if (formData.images && formData.images.length > 0) {
+      for (const image of formData.images) {
+        if (image.file_url && image.file_url instanceof File) {
+          try {
+            const url = await uploadFile(image.file_url as any, 'body-images');
+            uploadedBodyImages.push({
+              ...image,
+              file_url: url
+            });
+            uploadedFiles.push(url); // Track for cleanup
+          } catch (uploadError) {
+            console.error(`Failed to upload body image ${image.view}:`, uploadError);
+          }
+        } else if (typeof image.file_url === 'string') {
+          uploadedBodyImages.push(image);
+        }
+      }
+    }
+
+    // Step 3: Prepare submission data with uploaded URLs and client info
+    const submissionData = {
+      ...formData,
+      files: {
+        blood_report_url: uploadedUrls.blood_report_url || formData.files?.blood_report_url,
+        body_composition_report_url: uploadedUrls.body_composition_report_url || formData.files?.body_composition_report_url,
+        aspiration_image_url: uploadedUrls.aspiration_image_url || formData.files?.aspiration_image_url,
+      }
+    };
+
+    const submission = convertFormDataToSubmission(submissionData);
+    
+    // Add client info
     submission.ip_address = clientInfo.ip_address;
     submission.user_agent = clientInfo.user_agent;
 
-    console.log('Submitting form data:', submission);
+    console.log('Submitting form data with all fields:', submission);
 
-    // Submit main form data
-    const { data: submissionData, error: submissionError } = await supabase
+    // Step 4: Insert main submission
+    const { data: submissionResult, error: submissionError } = await supabase
       .from('form_submissions')
       .insert(submission)
       .select()
       .single();
 
     if (submissionError) {
-      console.error('Submission error:', submissionError);
-      throw submissionError;
+      throw new Error(`Failed to insert submission: ${submissionError.message}`);
     }
 
-    const submissionId = submission.submission_id;
+    submissionId = submissionResult.submission_id;
 
-    // Submit measurements if available
+    // Step 5: Insert body measurements
     const measurements = convertMeasurements(formData, submissionId);
-    if (measurements) {
+    if (measurements && Object.values(measurements).some(v => v !== null && v !== undefined)) {
       const { error: measurementsError } = await supabase
         .from('body_measurements')
         .insert(measurements);
 
       if (measurementsError) {
-        console.error('Measurements error:', measurementsError);
-        // Continue even if measurements fail
+        throw new Error(`Failed to insert measurements: ${measurementsError.message}`);
       }
     }
 
-    // Submit images if available
-    if (formData.images && formData.images.length > 0) {
-      const images = formData.images.map(image => ({
+    // Step 6: Insert body images
+    if (uploadedBodyImages.length > 0) {
+      const imagesToInsert = uploadedBodyImages.map(image => ({
         submission_id: submissionId,
         file_url: image.file_url,
         view_type: image.view,
@@ -133,20 +211,52 @@ export const submitFormData = async (formData: Partial<CompleteUserData>): Promi
 
       const { error: imagesError } = await supabase
         .from('full_body_images')
-        .insert(images);
+        .insert(imagesToInsert);
 
       if (imagesError) {
-        console.error('Images error:', imagesError);
-        // Continue even if images fail
+        throw new Error(`Failed to insert images: ${imagesError.message}`);
       }
     }
 
+    console.log('Form submission successful. ID:', submissionId);
     return submissionId;
+
   } catch (error) {
-    console.error('Form submission error:', error);
+    console.error('Form submission failed:', error);
+    
+    // Rollback: Delete the submission if it was created
+    if (submissionId) {
+      try {
+        await supabase
+          .from('form_submissions')
+          .delete()
+          .eq('submission_id', submissionId);
+        
+        console.log('Rolled back submission:', submissionId);
+      } catch (rollbackError) {
+        console.error('Failed to rollback submission:', rollbackError);
+      }
+    }
+
+    // Cleanup uploaded files on failure
+    for (const fileUrl of uploadedFiles) {
+      try {
+        const path = fileUrl.split('/').pop();
+        if (path) {
+          await supabase.storage
+            .from('fitness-uploads')
+            .remove([path]);
+        }
+      } catch (cleanupError) {
+        console.error('Failed to cleanup uploaded file:', cleanupError);
+      }
+    }
+
     throw error;
   }
 };
+
+// Other existing code...
 
 // Get client IP address
 const getClientIP = async (): Promise<string> => {
@@ -166,7 +276,8 @@ export const uploadFile = async (file: File, folder: string = 'uploads'): Promis
     const fileExt = file.name.split('.').pop();
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(7);
-    const fileName = `${folder}/${timestamp}-${randomStr}.${fileExt}`;
+    // Don't duplicate the folder name in the path
+    const fileName = `${timestamp}-${randomStr}.${fileExt}`;
 
     console.log('Uploading file:', fileName, 'Size:', file.size);
 
@@ -180,18 +291,23 @@ export const uploadFile = async (file: File, folder: string = 'uploads'): Promis
 
     if (error) {
       console.error('Upload error:', error);
-      throw error;
+      throw new Error('Upload failed');
     }
 
     console.log('Upload successful:', data);
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
+    // Refresh public URL
+    const { data: publicUrlData, error: urlError } = supabase.storage
       .from('fitness-uploads')
       .getPublicUrl(fileName);
 
-    console.log('Public URL:', publicUrl);
-    return publicUrl;
+    if (urlError) {
+      console.error('Failed to get public URL:', urlError);
+      throw new Error('Could not get public URL');
+    }
+
+    console.log('Public URL:', publicUrlData);
+    return publicUrlData.publicUrl;
   } catch (error) {
     console.error('File upload error:', error);
     throw error;
@@ -219,27 +335,101 @@ export const getFormSubmissions = async (): Promise<FormSubmission[]> => {
   }
 };
 
-// Export to CSV with proper field names
+// Fetch form submissions with all related data (measurements and images)
+export const fetchSubmissionsWithDetails = async (): Promise<any[]> => {
+  const submissions = await getFormSubmissions();
+  const detailedSubmissions = [];
+
+  for (const submission of submissions) {
+    // Fetch body measurements
+    const { data: measurementData } = await supabase
+      .from('body_measurements')
+      .select('*')
+      .eq('submission_id', submission.submission_id)
+      .single();
+
+    // Fetch full body images
+    const { data: imageData } = await supabase
+      .from('full_body_images')
+      .select('*')
+      .eq('submission_id', submission.submission_id)
+      .order('view_type');
+
+    // Combine all data
+    const completeSubmission = {
+      ...submission,
+      // Add measurements as separate fields
+      forearm_in: measurementData?.forearm_in || null,
+      bicep_in: measurementData?.bicep_in || null,
+      shoulder_in: measurementData?.shoulder_in || null,
+      chest_in: measurementData?.chest_in || null,
+      upper_waist_in: measurementData?.upper_waist_in || null,
+      lower_waist_in: measurementData?.lower_waist_in || null,
+      belly_button_circumference_in: measurementData?.belly_button_circumference_in || null,
+      buttocks_in: measurementData?.buttocks_in || null,
+      thighs_in: measurementData?.thighs_in || null,
+      // Add full body images
+      full_body_images: imageData || [],
+    };
+
+    detailedSubmissions.push(completeSubmission);
+  }
+
+  return detailedSubmissions;
+};
+
+// Export to CSV with proper field names and complete data
 export const exportToCSV = (data: any[], filename: string = 'grainz-fitness-submissions.csv') => {
   if (!data.length) return;
 
-  // Map database columns to readable headers
+  // Map database columns to readable headers - all 43 fields
   const headerMapping: Record<string, string> = {
     submission_id: 'Submission ID',
+    
+    // Basic Information
     user_name: 'Your Name',
     email: 'Email Address',
     phone_number: 'Phone Number',
     profession: 'Profession',
+    
+    // Demographics
+    age_bracket: 'Age Bracket',
+    height_cm: 'Height (cm)',
+    current_weight_kg: 'Current Weight (kg)',
+    target_weight_kg: 'Target Weight (kg)',
+    
+    // Current Status
     current_diet_timetable: 'Current Diet Timetable',
     current_workout_plan: 'Current Workout Plan',
     daily_schedule: 'Daily Schedule with Timings',
+    
+    // Goals
     fitness_goal_6_months: 'Fitness Goal (6 Months)',
     fitness_goal_long_term: 'Long-term Fitness Goal',
+    target_body_areas: 'Target Body Areas',
+    primary_goal: 'Primary Goal',
+    ideal_physique: 'Ideal Physique',
+    
+    // Health Information
     medical_issues_allergies: 'Medical Issues or Food Allergies',
+    resting_heart_rate: 'Resting Heart Rate (BPM)',
+    alcohol_smoke_frequency: 'Alcohol/Smoke Frequency',
+    body_fat_percent_band: 'Body Fat Percentage Band',
+    water_intake: 'Water Intake',
+    
+    // Workout Preferences
     preferred_workout_time: 'Preferred Workout Time',
     has_personal_trainer: 'Has Personal Trainer',
-    target_body_areas: 'Target Body Areas',
-    resting_heart_rate: 'Resting Heart Rate (BPM)',
+    workout_location: 'Workout Location',
+    equipment_access_level: 'Equipment Access Level',
+    training_frequency_recent: 'Recent Training Frequency',
+    session_duration_preference: 'Session Duration Preference',
+    fitness_level: 'Fitness Level (1-10)',
+    pushups_max_reps_band: 'Push-ups Max Reps',
+    pullups_max_reps_band: 'Pull-ups Max Reps',
+    
+    // Diet Preferences
+    diet_type: 'Diet Type',
     high_calorie_favourite_foods: 'High Calorie Favourite Foods',
     other_high_calorie_sweets: 'Other High Calorie Sweets',
     preferred_included_foods: 'Preferred Foods to Include',
@@ -247,39 +437,76 @@ export const exportToCSV = (data: any[], filename: string = 'grainz-fitness-subm
     favourite_fruits: 'Favourite Fruits',
     favourite_vegetables: 'Favourite Vegetables',
     diet_habits: 'Diet Habits',
+    sugar_intake_frequency: 'Sugar Intake Frequency',
+    mealprep_time_preference: 'Meal Prep Time Preference',
+    
+    // Program Information
     programme_start_date: 'Programme Start Date',
-    alcohol_smoke_frequency: 'Alcohol/Smoke Frequency',
     programme_chosen: 'Programme Chosen',
+    
+    // File Uploads
     blood_report_url: 'Blood Report',
     body_composition_report_url: 'Body Composition Report',
     aspiration_image_url: 'Aspiration Body Image',
+    
+    // Metadata
     created_at: 'Submitted At',
     ip_address: 'IP Address',
     user_agent: 'User Agent',
     form_version: 'Form Version'
   };
 
-  // Get ordered headers
+  // Get ordered headers - all 43 fields in logical order
   const orderedKeys = [
     'submission_id',
     'created_at',
+    
+    // Basic Information (4 fields)
     'user_name',
     'email',
     'phone_number',
     'profession',
-    'programme_start_date',
-    'programme_chosen',
+    
+    // Demographics (4 fields)
+    'age_bracket',
+    'height_cm',
+    'current_weight_kg',
+    'target_weight_kg',
+    
+    // Goals (5 fields)
+    'primary_goal',
+    'ideal_physique',
     'fitness_goal_6_months',
     'fitness_goal_long_term',
     'target_body_areas',
-    'current_diet_timetable',
-    'current_workout_plan',
-    'daily_schedule',
-    'preferred_workout_time',
-    'has_personal_trainer',
+    
+    // Health Information (5 fields)
     'medical_issues_allergies',
     'resting_heart_rate',
     'alcohol_smoke_frequency',
+    'body_fat_percent_band',
+    'water_intake',
+    
+    // Current Status (3 fields)
+    'current_diet_timetable',
+    'current_workout_plan',
+    'daily_schedule',
+    
+    // Workout Preferences (9 fields)
+    'preferred_workout_time',
+    'has_personal_trainer',
+    'workout_location',
+    'equipment_access_level',
+    'training_frequency_recent',
+    'session_duration_preference',
+    'fitness_level',
+    'pushups_max_reps_band',
+    'pullups_max_reps_band',
+    
+    // Diet Preferences (9 fields)
+    'diet_type',
+    'sugar_intake_frequency',
+    'mealprep_time_preference',
     'high_calorie_favourite_foods',
     'other_high_calorie_sweets',
     'preferred_included_foods',
@@ -287,14 +514,60 @@ export const exportToCSV = (data: any[], filename: string = 'grainz-fitness-subm
     'favourite_fruits',
     'favourite_vegetables',
     'diet_habits',
+    
+    // Program Information (2 fields)
+    'programme_start_date',
+    'programme_chosen',
+    
+    // File Uploads (3 fields)
     'blood_report_url',
     'body_composition_report_url',
-    'aspiration_image_url'
+    'aspiration_image_url',
+    
+    // Metadata
+    'ip_address',
+    'user_agent',
+    'form_version'
   ];
 
-  // Filter only existing keys
+  // Body measurements columns
+  const measurementColumns = [
+    'forearm_in',
+    'bicep_in',
+    'shoulder_in',
+    'chest_in',
+    'upper_waist_in',
+    'lower_waist_in',
+    'belly_button_circumference_in',
+    'buttocks_in',
+    'thighs_in'
+  ];
+
+  // Filter only existing keys from base submission data
   const existingKeys = orderedKeys.filter(key => data[0].hasOwnProperty(key));
   const headers = existingKeys.map(key => headerMapping[key] || key);
+  
+  // Add body measurement headers
+  headers.push(
+    'Forearm (inches)',
+    'Bicep (inches)',
+    'Shoulder (inches)',
+    'Chest (inches)',
+    'Upper Waist (inches)',
+    'Lower Waist (inches)',
+    'Belly Button Circumference (inches)',
+    'Buttocks (inches)',
+    'Thighs (inches)'
+  );
+  
+  // Add full body image headers
+  headers.push(
+    'Front View Image',
+    'Rear View Image',
+    'Side Left View Image',
+    'Side Right View Image',
+    'Other View Images'
+  );
   
   // Format data for CSV
   const formatValue = (value: any): string => {
@@ -302,6 +575,19 @@ export const exportToCSV = (data: any[], filename: string = 'grainz-fitness-subm
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     if (Array.isArray(value)) {
       return value.length > 0 ? value.join('; ') : '';
+    }
+    // Handle JSON strings (from JSONB columns)
+    if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          return parsed.length > 0 ? parsed.join('; ') : '';
+        }
+        return JSON.stringify(parsed);
+      } catch {
+        // If parsing fails, return as-is
+        return value;
+      }
     }
     if (value instanceof Date) {
       return value.toLocaleDateString();
@@ -319,16 +605,37 @@ export const exportToCSV = (data: any[], filename: string = 'grainz-fitness-subm
   // Create CSV content
   const csvContent = [
     headers.join(','),
-    ...data.map(row => 
-      existingKeys.map(key => {
+    ...data.map(row => {
+      // Get base submission data
+      const baseData = existingKeys.map(key => {
         const value = formatValue(row[key]);
         // Escape quotes and wrap in quotes if contains comma, newline, or quotes
         if (value.includes(',') || value.includes('"') || value.includes('\n')) {
           return `"${value.replace(/"/g, '""')}"`;
         }
         return value;
-      }).join(',')
-    )
+      });
+      
+      // Add body measurements
+      const measurements = measurementColumns.map(col => {
+        const value = row[col] ? String(row[col]) : '';
+        return value;
+      });
+      
+      // Add full body images by view type
+      const images = row.full_body_images || [];
+      const frontImage = images.find((img: any) => img.view_type === 'front')?.file_url || '';
+      const rearImage = images.find((img: any) => img.view_type === 'rear')?.file_url || '';
+      const sideLeftImage = images.find((img: any) => img.view_type === 'side_left')?.file_url || '';
+      const sideRightImage = images.find((img: any) => img.view_type === 'side_right')?.file_url || '';
+      const otherImages = images
+        .filter((img: any) => !['front', 'rear', 'side_left', 'side_right'].includes(img.view_type))
+        .map((img: any) => img.file_url)
+        .join('; ');
+      
+      // Combine all data
+      return [...baseData, ...measurements, frontImage, rearImage, sideLeftImage, sideRightImage, otherImages].join(',');
+    })
   ].join('\n');
 
   // Add BOM for UTF-8 encoding to properly display special characters

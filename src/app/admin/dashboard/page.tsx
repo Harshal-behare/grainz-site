@@ -6,10 +6,10 @@ import {
   Mail, Phone, Briefcase, Target, Heart, Clock,
   FileText, Image as ImageIcon, Activity,
   X, Maximize2, LogOut, RefreshCw, Users, TrendingUp,
-  Award
+  Award, File, CheckCircle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
-import { getFormSubmissions, exportToCSV } from '@/lib/form-service';
+import { getFormSubmissions, exportToCSV, fetchSubmissionsWithDetails } from '@/lib/form-service';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -44,6 +44,17 @@ const AdminDashboard: React.FC = () => {
   const [measurements, setMeasurements] = useState<BodyMeasurements | null>(null);
   const [images, setImages] = useState<FullBodyImage[]>([]);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
+
+  // Helper function to check if a URL is an image
+  const isImageUrl = (url: string): boolean => {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    return imageExtensions.some(ext => url.toLowerCase().includes(ext));
+  };
+
+  // Helper function to check if a URL is a PDF
+  const isPdfUrl = (url: string): boolean => {
+    return url.toLowerCase().includes('.pdf');
+  };
 
   useEffect(() => {
     checkAuth();
@@ -116,8 +127,43 @@ const AdminDashboard: React.FC = () => {
     setImages(imageData || []);
   };
 
-  const handleExport = () => {
-    exportToCSV(filteredSubmissions);
+  const handleExport = async () => {
+    try {
+      // Show loading state
+      const originalText = document.querySelector('.export-button')?.textContent;
+      const exportButton = document.querySelector('.export-button');
+      if (exportButton) {
+        exportButton.textContent = 'Exporting...';
+        exportButton.setAttribute('disabled', 'true');
+      }
+      
+      // Fetch complete data with measurements and images
+      const completeData = await fetchSubmissionsWithDetails();
+      
+      // Filter based on current search term
+      const filteredCompleteData = completeData.filter(item => {
+        if (!searchTerm) return true;
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          item.user_name?.toLowerCase().includes(searchLower) ||
+          item.email?.toLowerCase().includes(searchLower) ||
+          item.phone_number?.includes(searchTerm) ||
+          item.submission_id?.toLowerCase().includes(searchLower)
+        );
+      });
+      
+      // Export the complete data
+      exportToCSV(filteredCompleteData);
+      
+      // Restore button state
+      if (exportButton && originalText) {
+        exportButton.textContent = originalText;
+        exportButton.removeAttribute('disabled');
+      }
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      alert('Failed to export data. Please try again.');
+    }
   };
 
   const handleLogout = async () => {
@@ -136,9 +182,16 @@ const AdminDashboard: React.FC = () => {
     });
   };
 
-  const formatArray = (arr: string[] | null) => {
-    if (!arr || arr.length === 0) return 'None';
-    return arr.join(', ');
+  const formatArray = (arr: string[] | string | null) => {
+    if (!arr) return 'None';
+    // Handle if arr is a string (not an array)
+    if (typeof arr === 'string') {
+      return arr || 'None';
+    }
+    // Handle array
+    if (Array.isArray(arr) && arr.length === 0) return 'None';
+    if (Array.isArray(arr)) return arr.join(', ');
+    return 'None';
   };
 
   return (
@@ -245,7 +298,7 @@ const AdminDashboard: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button onClick={handleExport} variant="outline">
+              <Button onClick={handleExport} variant="outline" className="export-button">
                 <Download size={18} className="mr-2" />
                 Export CSV
               </Button>
@@ -284,6 +337,7 @@ const AdminDashboard: React.FC = () => {
                       <th className="text-left py-3 px-4 text-sm font-medium">Name</th>
                       <th className="text-left py-3 px-4 text-sm font-medium">Email</th>
                       <th className="text-left py-3 px-4 text-sm font-medium">Phone</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium">Files</th>
                       <th className="text-left py-3 px-4 text-sm font-medium">Submitted</th>
                       <th className="text-left py-3 px-4 text-sm font-medium">Actions</th>
                     </tr>
@@ -302,6 +356,37 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="py-3 px-4">
                           {submission.phone_number || 'N/A'}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center space-x-1">
+                            {submission.blood_report_url && (
+                              <div className="group relative">
+                                <FileText size={16} className="text-primary" />
+                                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                  Blood Report
+                                </span>
+                              </div>
+                            )}
+                            {submission.body_composition_report_url && (
+                              <div className="group relative">
+                                <FileText size={16} className="text-primary" />
+                                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                  Body Composition
+                                </span>
+                              </div>
+                            )}
+                            {submission.aspiration_image_url && (
+                              <div className="group relative">
+                                <ImageIcon size={16} className="text-primary" />
+                                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                  Aspiration Image
+                                </span>
+                              </div>
+                            )}
+                            {!submission.blood_report_url && !submission.body_composition_report_url && !submission.aspiration_image_url && (
+                              <span className="text-xs text-foreground-muted">None</span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 px-4 text-sm text-foreground-muted">
                           {formatDate(submission.created_at || null)}
@@ -461,7 +546,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">High Calorie Favourite Foods</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.high_calorie_favourite_foods || null)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.high_calorie_favourite_foods)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Other High Calorie Sweets</label>
@@ -469,23 +554,23 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Preferred Foods to Include</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.preferred_included_foods || null)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.preferred_included_foods)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Foods You Despise</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.foods_despised || null)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.foods_despised)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Favourite Fruits</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.favourite_fruits || null)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.favourite_fruits)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Favourite Vegetables</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.favourite_vegetables || null)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.favourite_vegetables)}</p>
                   </div>
                   <div>
                     <label className="text-sm text-foreground-muted">Diet Habits</label>
-                    <p className="font-medium">{formatArray(selectedSubmission.diet_habits || null)}</p>
+                    <p className="font-medium">{formatArray(selectedSubmission.diet_habits)}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -542,7 +627,7 @@ const AdminDashboard: React.FC = () => {
                 </Card>
               )}
 
-              {/* Uploaded Files */}
+{/* Uploaded Files */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -550,33 +635,117 @@ const AdminDashboard: React.FC = () => {
                     Uploaded Documents
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {selectedSubmission.blood_report_url && (
-                    <div className="flex items-center justify-between p-3 bg-background-secondary rounded-lg">
-                      <span>Blood Report</span>
-                      <a href={selectedSubmission.blood_report_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline">View</Button>
-                      </a>
+                    <div className="relative group">
+                      {isImageUrl(selectedSubmission.blood_report_url) ? (
+                        <>
+                          <img
+                            src={selectedSubmission.blood_report_url}
+                            alt="Blood Report"
+                            className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setExpandedImage(selectedSubmission.blood_report_url)}
+                          />
+                          <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                            Blood Report
+                          </div>
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button size="sm" variant="ghost" className="bg-black/50 text-white hover:bg-black/70">
+                              <Maximize2 size={16} />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <a
+                          href={selectedSubmission.blood_report_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <div className="w-full h-48 bg-background-secondary rounded-lg flex flex-col items-center justify-center hover:bg-background-tertiary transition-colors">
+                            <File size={48} className="text-foreground-muted mb-2" />
+                            <span className="text-sm font-medium">Blood Report</span>
+                            <span className="text-xs text-foreground-muted mt-1">PDF Document</span>
+                            <span className="text-xs text-primary mt-2">Click to view</span>
+                          </div>
+                        </a>
+                      )}
                     </div>
                   )}
                   {selectedSubmission.body_composition_report_url && (
-                    <div className="flex items-center justify-between p-3 bg-background-secondary rounded-lg">
-                      <span>Body Composition Report</span>
-                      <a href={selectedSubmission.body_composition_report_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline">View</Button>
-                      </a>
+                    <div className="relative group">
+                      {isImageUrl(selectedSubmission.body_composition_report_url) ? (
+                        <>
+                          <img
+                            src={selectedSubmission.body_composition_report_url}
+                            alt="Body Composition Report"
+                            className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setExpandedImage(selectedSubmission.body_composition_report_url)}
+                          />
+                          <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                            Body Composition
+                          </div>
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button size="sm" variant="ghost" className="bg-black/50 text-white hover:bg-black/70">
+                              <Maximize2 size={16} />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <a
+                          href={selectedSubmission.body_composition_report_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <div className="w-full h-48 bg-background-secondary rounded-lg flex flex-col items-center justify-center hover:bg-background-tertiary transition-colors">
+                            <File size={48} className="text-foreground-muted mb-2" />
+                            <span className="text-sm font-medium">Body Composition</span>
+                            <span className="text-xs text-foreground-muted mt-1">PDF Document</span>
+                            <span className="text-xs text-primary mt-2">Click to view</span>
+                          </div>
+                        </a>
+                      )}
                     </div>
                   )}
                   {selectedSubmission.aspiration_image_url && (
-                    <div className="flex items-center justify-between p-3 bg-background-secondary rounded-lg">
-                      <span>Aspiration Body Image</span>
-                      <a href={selectedSubmission.aspiration_image_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline">View</Button>
-                      </a>
+                    <div className="relative group">
+                      {isImageUrl(selectedSubmission.aspiration_image_url) ? (
+                        <>
+                          <img
+                            src={selectedSubmission.aspiration_image_url}
+                            alt="Aspiration Body Image"
+                            className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setExpandedImage(selectedSubmission.aspiration_image_url)}
+                          />
+                          <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                            Aspiration Image
+                          </div>
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button size="sm" variant="ghost" className="bg-black/50 text-white hover:bg-black/70">
+                              <Maximize2 size={16} />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <a
+                          href={selectedSubmission.aspiration_image_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <div className="w-full h-48 bg-background-secondary rounded-lg flex flex-col items-center justify-center hover:bg-background-tertiary transition-colors">
+                            <File size={48} className="text-foreground-muted mb-2" />
+                            <span className="text-sm font-medium">Aspiration Document</span>
+                            <span className="text-xs text-foreground-muted mt-1">PDF Document</span>
+                            <span className="text-xs text-primary mt-2">Click to view</span>
+                          </div>
+                        </a>
+                      )}
                     </div>
                   )}
                   {!selectedSubmission.blood_report_url && !selectedSubmission.body_composition_report_url && !selectedSubmission.aspiration_image_url && (
-                    <p className="text-foreground-muted">No documents uploaded</p>
+                    <p className="text-foreground-muted col-span-full text-center">No documents uploaded</p>
                   )}
                 </CardContent>
               </Card>
