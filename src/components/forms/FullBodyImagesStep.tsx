@@ -129,9 +129,9 @@ const FullBodyImagesStep: React.FC<FormStepProps> = ({ data, updateData }) => {
         images: updatedImages,
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
-      alert(`Failed to upload image: ${error.message}`);
+      alert(`Failed to upload image: ${error?.message || 'Unknown error occurred'}`);
       
       // Reset upload state on error
       setUploads(prev => 

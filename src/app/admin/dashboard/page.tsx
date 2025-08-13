@@ -182,7 +182,7 @@ const AdminDashboard: React.FC = () => {
     });
   };
 
-  const formatArray = (arr: string[] | string | null) => {
+  const formatArray = (arr: string[] | string | null | undefined) => {
     if (!arr) return 'None';
     // Handle if arr is a string (not an array)
     if (typeof arr === 'string') {
@@ -644,7 +644,7 @@ const AdminDashboard: React.FC = () => {
                             src={selectedSubmission.blood_report_url}
                             alt="Blood Report"
                             className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => setExpandedImage(selectedSubmission.blood_report_url)}
+                            onClick={() => setExpandedImage(selectedSubmission.blood_report_url || null)}
                           />
                           <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
                             Blood Report
@@ -680,7 +680,7 @@ const AdminDashboard: React.FC = () => {
                             src={selectedSubmission.body_composition_report_url}
                             alt="Body Composition Report"
                             className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => setExpandedImage(selectedSubmission.body_composition_report_url)}
+                            onClick={() => setExpandedImage(selectedSubmission.body_composition_report_url || null)}
                           />
                           <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
                             Body Composition
@@ -716,7 +716,7 @@ const AdminDashboard: React.FC = () => {
                             src={selectedSubmission.aspiration_image_url}
                             alt="Aspiration Body Image"
                             className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => setExpandedImage(selectedSubmission.aspiration_image_url)}
+                            onClick={() => setExpandedImage(selectedSubmission.aspiration_image_url || null)}
                           />
                           <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
                             Aspiration Image

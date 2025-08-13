@@ -235,23 +235,11 @@ const DietPreferencesStep: React.FC<FormStepProps> = ({ data, updateData }) => {
             <textarea
               className="w-full h-24 px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               placeholder="e.g., Chicken, avocado, quinoa, berries, Greek yogurt"
-              value={dietData.favorite_foods || ''}
-              onChange={(e) => handleTextInput('favorite_foods', e.target.value)}
+              value={dietData.preferred_included_foods?.join(', ') || ''}
+              onChange={(e) => handleTextInput('preferred_included_foods', e.target.value.split(', ').filter(Boolean))}
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-foreground block mb-2">
-              Any allergies or intolerances?
-            </label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="e.g., Lactose intolerant, nut allergy, gluten sensitivity"
-              value={dietData.allergies_intolerances || ''}
-              onChange={(e) => handleTextInput('allergies_intolerances', e.target.value)}
-            />
-          </div>
         </div>
       </div>
 

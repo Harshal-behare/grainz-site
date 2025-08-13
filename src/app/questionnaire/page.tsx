@@ -94,14 +94,20 @@ const stepTitles: Record<FormStep | string, string> = {
 const QuestionnairePage: React.FC = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [formData, setFormData] = useState<Partial<CompleteUserData>>(() => {
-    // Retrieve stored data from localStorage
-    const savedData = localStorage.getItem('formData');
-    return savedData ? JSON.parse(savedData) : {};
+    // Retrieve stored data from localStorage only on client side
+    if (typeof window !== 'undefined') {
+      const savedData = localStorage.getItem('formData');
+      return savedData ? JSON.parse(savedData) : {};
+    }
+    return {};
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedStepIndices, setCompletedStepIndices] = useState<number[]>(() => {
-    const saved = localStorage.getItem('completedSteps');
-    return saved ? JSON.parse(saved) : [];
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('completedSteps');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
   });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 

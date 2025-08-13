@@ -15,67 +15,67 @@ const convertFormDataToSubmission = (formData: Partial<CompleteUserData>): FormS
     submission_id: generateSubmissionId(),
     
     // Basic Information (4 fields)
-    user_name: formData.profile?.user_name || null,
-    email: formData.profile?.email || null,
-    phone_number: formData.profile?.phone_number || null,
-    profession: formData.profile?.profession || null,
+    user_name: formData.profile?.user_name || undefined,
+    email: formData.profile?.email || undefined,
+    phone_number: formData.profile?.phone_number || undefined,
+    profession: formData.profile?.profession || undefined,
     
     // Demographics (4 fields)
-    age_bracket: formData.personal?.age_bracket || null,
-    height_cm: formData.personal?.height || null,
-    current_weight_kg: formData.personal?.weight?.current || null,
-    target_weight_kg: formData.personal?.weight?.target || null,
+    age_bracket: formData.personal?.age_bracket || undefined,
+    height_cm: formData.personal?.height || undefined,
+    current_weight_kg: formData.personal?.weight?.current || undefined,
+    target_weight_kg: formData.personal?.weight?.target || undefined,
     
     // Current Status (3 fields)
-    current_diet_timetable: formData.diet?.current_diet_timetable || null,
-    current_workout_plan: formData.workout?.current_workout_plan || null,
-    daily_schedule: formData.workout?.daily_schedule || null,
+    current_diet_timetable: formData.diet?.current_diet_timetable || undefined,
+    current_workout_plan: formData.workout?.current_workout_plan || undefined,
+    daily_schedule: formData.workout?.daily_schedule || undefined,
     
     // Goals (5 fields)
-    fitness_goal_6_months: formData.goals?.fitness_goal_6_months || null,
-    fitness_goal_long_term: formData.goals?.fitness_goal_long_term || null,
+    fitness_goal_6_months: formData.goals?.fitness_goal_6_months || undefined,
+    fitness_goal_long_term: formData.goals?.fitness_goal_long_term || undefined,
     target_body_areas: JSON.stringify(formData.goals?.target_body_areas || []),
-    primary_goal: formData.goals?.primary_goal || null,
-    ideal_physique: formData.goals?.physique_target as 'athlete' | 'hero' | 'bodybuilder' | undefined || null,
+    primary_goal: formData.goals?.primary_goal || undefined,
+    ideal_physique: formData.goals?.physique_target as 'athlete' | 'hero' | 'bodybuilder' | undefined,
     
     // Health Information (5 fields)
-    medical_issues_allergies: formData.health?.medical_issues_allergies || null,
-    resting_heart_rate: formData.health?.resting_heart_rate || null,
-    alcohol_smoke_frequency: formData.health?.alcohol_smoke_frequency || null,
-    body_fat_percent_band: formData.health?.body_fat_percent_band || null,
-    water_intake: formData.health?.water_intake || null,
+    medical_issues_allergies: formData.health?.medical_issues_allergies || undefined,
+    resting_heart_rate: formData.health?.resting_heart_rate || undefined,
+    alcohol_smoke_frequency: formData.health?.alcohol_smoke_frequency || undefined,
+    body_fat_percent_band: formData.health?.body_fat_percent_band || undefined,
+    water_intake: formData.health?.water_intake || undefined,
     
     // Workout Preferences (9 fields)
-    preferred_workout_time: formData.workout?.preferred_workout_time || null,
+    preferred_workout_time: formData.workout?.preferred_workout_time || undefined,
     has_personal_trainer: formData.workout?.has_personal_trainer ?? false,
-    workout_location: formData.workout?.workout_location || null,
-    equipment_access_level: formData.workout?.equipment_access_level || null,
-    training_frequency_recent: formData.workout?.training_frequency_recent || null,
-    session_duration_preference: formData.workout?.session_duration_preference || null,
-    fitness_level: formData.workout?.fitness_level || null,
-    pushups_max_reps_band: formData.workout?.pushups_max_reps_band || null,
-    pullups_max_reps_band: formData.workout?.pullups_max_reps_band || null,
+    workout_location: formData.workout?.workout_location || undefined,
+    equipment_access_level: formData.workout?.equipment_access_level || undefined,
+    training_frequency_recent: formData.workout?.training_frequency_recent || undefined,
+    session_duration_preference: formData.workout?.session_duration_preference || undefined,
+    fitness_level: formData.workout?.fitness_level || undefined,
+    pushups_max_reps_band: formData.workout?.pushups_max_reps_band || undefined,
+    pullups_max_reps_band: formData.workout?.pullups_max_reps_band || undefined,
     
     // Diet Preferences (9 fields)
-    diet_type: formData.diet?.diet_type || null,
+    diet_type: formData.diet?.diet_type || undefined,
     high_calorie_favourite_foods: JSON.stringify(formData.diet?.high_calorie_favourite_foods || []),
-    other_high_calorie_sweets: formData.diet?.other_high_calorie_sweets || null,
+    other_high_calorie_sweets: formData.diet?.other_high_calorie_sweets || undefined,
     preferred_included_foods: JSON.stringify(formData.diet?.preferred_included_foods || []),
     foods_despised: JSON.stringify(formData.diet?.foods_despised || []),
     favourite_fruits: JSON.stringify(formData.diet?.favourite_fruits || []),
     favourite_vegetables: JSON.stringify(formData.diet?.favourite_vegetables || []),
     diet_habits: JSON.stringify(formData.diet?.diet_habits || []),
-    sugar_intake_frequency: formData.diet?.sugar_intake_frequency || null,
-    mealprep_time_preference: formData.diet?.mealprep_time_preference || null,
+    sugar_intake_frequency: formData.diet?.sugar_intake_frequency || undefined,
+    mealprep_time_preference: formData.diet?.mealprep_time_preference || undefined,
     
     // Program Information (2 fields)
-    programme_start_date: formData.profile?.programme_start_date?.toISOString().split('T')[0] || null,
-    programme_chosen: formData.additional?.programme_chosen || formData.additional?.extra_challenge || null,
+    programme_start_date: formData.profile?.programme_start_date?.toISOString().split('T')[0] || undefined,
+    programme_chosen: formData.additional?.programme_chosen || formData.additional?.extra_challenge || undefined,
     
     // File Uploads (3 fields)
-    blood_report_url: formData.files?.blood_report_url || null,
-    body_composition_report_url: formData.files?.body_composition_report_url || null,
-    aspiration_image_url: formData.files?.aspiration_image_url || null,
+    blood_report_url: formData.files?.blood_report_url || undefined,
+    body_composition_report_url: formData.files?.body_composition_report_url || undefined,
+    aspiration_image_url: formData.files?.aspiration_image_url || undefined,
     
     // Metadata
     form_version: 'v1.0',
@@ -138,22 +138,15 @@ export const submitFormData = async (formData: Partial<CompleteUserData>): Promi
     }
 
     // Handle body images uploads
-    const uploadedBodyImages: FullBodyImage[] = [];
+    const uploadedBodyImages: any[] = [];
     if (formData.images && formData.images.length > 0) {
       for (const image of formData.images) {
-        if (image.file_url && image.file_url instanceof File) {
-          try {
-            const url = await uploadFile(image.file_url as any, 'body-images');
-            uploadedBodyImages.push({
-              ...image,
-              file_url: url
-            });
-            uploadedFiles.push(url); // Track for cleanup
-          } catch (uploadError) {
-            console.error(`Failed to upload body image ${image.view}:`, uploadError);
-          }
-        } else if (typeof image.file_url === 'string') {
-          uploadedBodyImages.push(image);
+        // Images should already have URLs from the upload step in the form
+        if (typeof image.file_url === 'string') {
+          uploadedBodyImages.push({
+            file_url: image.file_url,
+            view_type: image.view
+          });
         }
       }
     }
@@ -190,7 +183,7 @@ export const submitFormData = async (formData: Partial<CompleteUserData>): Promi
     submissionId = submissionResult.submission_id;
 
     // Step 5: Insert body measurements
-    const measurements = convertMeasurements(formData, submissionId);
+    const measurements = convertMeasurements(formData, submissionId!);
     if (measurements && Object.values(measurements).some(v => v !== null && v !== undefined)) {
       const { error: measurementsError } = await supabase
         .from('body_measurements')
@@ -204,9 +197,9 @@ export const submitFormData = async (formData: Partial<CompleteUserData>): Promi
     // Step 6: Insert body images
     if (uploadedBodyImages.length > 0) {
       const imagesToInsert = uploadedBodyImages.map(image => ({
-        submission_id: submissionId,
+        submission_id: submissionId!,
         file_url: image.file_url,
-        view_type: image.view,
+        view_type: image.view_type,
       }));
 
       const { error: imagesError } = await supabase
@@ -219,7 +212,7 @@ export const submitFormData = async (formData: Partial<CompleteUserData>): Promi
     }
 
     console.log('Form submission successful. ID:', submissionId);
-    return submissionId;
+    return submissionId!;
 
   } catch (error) {
     console.error('Form submission failed:', error);
@@ -297,12 +290,11 @@ export const uploadFile = async (file: File, folder: string = 'uploads'): Promis
     console.log('Upload successful:', data);
 
     // Refresh public URL
-    const { data: publicUrlData, error: urlError } = supabase.storage
+    const { data: publicUrlData } = supabase.storage
       .from('fitness-uploads')
       .getPublicUrl(fileName);
 
-    if (urlError) {
-      console.error('Failed to get public URL:', urlError);
+    if (!publicUrlData || !publicUrlData.publicUrl) {
       throw new Error('Could not get public URL');
     }
 

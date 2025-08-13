@@ -33,10 +33,10 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     info: 'text-blue-500'
   };
 
-  const buttonVariants = {
-    danger: 'danger' as const,
-    warning: 'warning' as const,
-    info: 'primary' as const
+  const buttonVariants: Record<string, 'primary' | 'secondary' | 'ghost' | 'outline'> = {
+    danger: 'primary',
+    warning: 'primary', 
+    info: 'primary'
   };
 
   return (
